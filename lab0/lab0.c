@@ -1,0 +1,6 @@
+#include <stdio.h>
+
+int main() {
+  printf("lets start the journey of CMPT 201..!!");
+  return 0;
+}
