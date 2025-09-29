@@ -1,0 +1,76 @@
+// lab3.c
+
+
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define CAP 5
+
+static char *hist[CAP];
+static int cnt = 0;  
+static int nxt = 0;   
+
+static void push(const char *s) {
+   
+    free(hist[nxt]);
+    hist[nxt] = strdup(s);
+    if (!hist[nxt]) { perror("strdup"); exit(1); }
+
+    nxt = (nxt + 1) % CAP;
+    if (cnt < CAP) cnt++;
+}
+
+static void print_hist(void) {
+    
+    int start = (nxt - cnt + CAP) % CAP;
+    for (int i = 0; i < cnt; i++) {
+        char *line = hist[(start + i) % CAP];
+        if (!line) continue;
+        
+        size_t L = strlen(line);
+        if (L > 0 && line[L - 1] == '\n') {
+            fputs(line, stdout);
+        } else {
+            fputs(line, stdout);
+            fputc('\n', stdout);
+        }
+    }
+}
+
+static void free_all(void) {
+    for (int i = 0; i < CAP; i++) {
+        free(hist[i]);
+        hist[i] = NULL;
+    }
+}
+
+int main(void) {
+    char *buf = NULL;   
+    size_t cap = 0;
+
+    while (1) {
+        printf("Enter input: ");
+        fflush(stdout);
+
+        ssize_t n = getline(&buf, &cap, stdin);
+        if (n == -1) { 
+            putchar('\n');
+            break;
+        }
+
+        
+        push(buf);
+
+
+        if (strcmp(buf, "print\n") == 0 || strcmp(buf, "print") == 0) {
+            print_hist();
+        }
+    }
+
+    free(buf);
+    free_all();
+    return 0;
+}
+
