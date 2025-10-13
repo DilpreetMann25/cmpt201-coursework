@@ -1,0 +1,174 @@
+// lab5.c
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+struct header {
+  uint64_t size;       // size of the free block payload (bytes/units)
+  struct header *next; // singly-linked free list
+  int id;              // identifier to print/debug
+};
+
+void initialize_block(struct header *block, uint64_t size, struct header *next,
+                      int id) {
+  block->size = size;
+  block->next = next;
+  block->id = id;
+}
+
+int find_first_fit(struct header *free_list_ptr, uint64_t size) {
+  // Return the ID of the first block with size >= requested size; else -1.
+  for (struct header *p = free_list_ptr; p != NULL; p = p->next) {
+    if (p->size >= size) {
+      return p->id;
+    }
+  }
+  return -1;
+}
+
+int find_best_fit(struct header *free_list_ptr, uint64_t size) {
+  // Return the ID of the smallest block that still fits; else -1.
+  int best_fit_id = -1;
+  uint64_t best_fit_size = UINT64_MAX;
+
+  for (struct header *p = free_list_ptr; p != NULL; p = p->next) {
+    if (p->size >= size && p->size < best_fit_size) {
+      best_fit_size = p->size;
+      best_fit_id = p->id;
+    }
+  }
+  return best_fit_id;
+}
+
+int find_worst_fit(struct header *free_list_ptr, uint64_t size) {
+  // Return the ID of the largest block that fits; else -1.
+  int worst_fit_id = -1;
+  uint64_t worst_fit_size = 0;
+
+  for (struct header *p = free_list_ptr; p != NULL; p = p->next) {
+    if (p->size >= size && p->size > worst_fit_size) {
+      worst_fit_size = p->size;
+      worst_fit_id = p->id;
+    }
+  }
+  return worst_fit_id;
+}
+
+int main(void) {
+  // Build a simple free list: [ (6,#1) -> (12,#2) -> (24,#3) -> (8,#4) ->
+  // (4,#5) ]
+  struct header *free_block1 = (struct header *)malloc(sizeof(struct header));
+  struct header *free_block2 = (struct header *)malloc(sizeof(struct header));
+  struct header *free_block3 = (struct header *)malloc(sizeof(struct header));
+  struct header *free_block4 = (struct header *)malloc(sizeof(struct header));
+  struct header *free_block5 = (struct header *)malloc(sizeof(struct header));
+
+  if (!free_block1 || !free_block2 || !free_block3 || !free_block4 ||
+      !free_block5) {
+    fprintf(stderr, "malloc failed\n");
+    return 1;
+  }
+
+  initialize_block(free_block1, 6, free_block2, 1);
+  initialize_block(free_block2, 12, free_block3, 2);
+  initialize_block(free_block3, 24, free_block4, 3);
+  initialize_block(free_block4, 8, free_block5, 4);
+  initialize_block(free_block5, 4, NULL, 5);
+
+  struct header *free_list_ptr = free_block1;
+
+  // Request size = 7 (as in the prompt)
+  int first_fit_id = find_first_fit(free_list_ptr, 7);
+  int best_fit_id = find_best_fit(free_list_ptr, 7);
+  int worst_fit_id = find_worst_fit(free_list_ptr, 7);
+
+  // Print out the IDs exactly like the sample output
+  printf("The ID for First-Fit algorithm is: %d\n", first_fit_id);
+  printf("The ID for Best-Fit algorithm is: %d\n", best_fit_id);
+  printf("The ID for Worst-Fit algorithm is: %d\n", worst_fit_id);
+
+  // Clean up (not required by the lab, but good hygiene)
+  free(free_block1);
+  free(free_block2);
+  free(free_block3);
+  free(free_block4);
+  free(free_block5);
+
+  return 0;
+}
+
+/*
+------------------------------------------------------------
+Part 2: Coalescing Contiguous Free Blocks (Pseudo-code)
+------------------------------------------------------------
+
+Goal:
+  When a block Z is freed, merge (coalesce) it with its adjacent free neighbors
+  (previous and/or next in memory) so that a series of small free blocks becomes
+  a single larger free block. We assume the free list is kept sorted by address.
+
+Assumptions:
+  - Each free block is represented by: header { size, next, id } at address p.
+  - The "size" field is the payload size in bytes (or units) following the
+header.
+  - The free list is sorted by increasing memory address.
+  - HEADER_SIZE is the size in bytes of struct header (for address arithmetic).
+  - Adjacent-in-memory means: end_of_A == address_of_B (i.e., they touch).
+
+Helper functions/macros (conceptual):
+  addr(p)         -> the memory address (pointer value) of header p
+  end_of(p)       -> (char*)addr(p) + HEADER_SIZE + p->size
+  HEADER_SIZE     -> sizeof(struct header)
+
+High-level algorithm when freeing block Z:
+
+free_block(Z):
+  1) If free_list is empty:
+       set free_list = Z; Z->next = NULL; return.
+
+  2) Insert Z into the free list so that the list remains sorted by address:
+       prev = NULL
+       curr = free_list
+       while curr != NULL and addr(curr) < addr(Z):
+           prev = curr
+           curr = curr->next
+       // Now insert Z between prev and curr
+       Z->next = curr
+       if prev == NULL:
+           free_list = Z
+       else:
+           prev->next = Z
+
+  3) Try coalescing with the NEXT neighbor (curr):
+       if curr != NULL and end_of(Z) == addr(curr):
+           // Merge Z and curr into Z
+           Z->size = Z->size + HEADER_SIZE + curr->size
+           Z->next = curr->next
+           // (curr is absorbed; it should not remain in the list)
+
+  4) Try coalescing with the PREVIOUS neighbor (prev):
+       // Note: If we merged with NEXT, Z->next might have changed.
+       // Check if prev physically touches Z. If so, merge into prev.
+       if prev != NULL and end_of(prev) == addr(Z):
+           prev->size = prev->size + HEADER_SIZE + Z->size
+           prev->next = Z->next
+           // (Z is absorbed into prev; the final coalesced block is 'prev')
+
+  5) Done. The free list remains sorted and maximally coalesced around Z.
+
+Example (conceptual, before and after):
+  ... [ X (free, size=8) ] [ Y (allocated, size=16) ] [ Z (free, size=8) ] ...
+  free(Y) =>
+    Insert Y between X and Z by address.
+    end_of(Y) == addr(Z)  --> merge Y+Z into Y (size becomes 16 + H + 8)
+    end_of(X) == addr(Y)  --> merge X+Y into X (size becomes 8 + H + (16+H+8))
+    Result: one larger free block replacing X..Z.
+
+Notes:
+  - Whether to use headers-only or headers+footers depends on the allocator
+design. With a singly-linked, address-sorted free list, headers are sufficient
+to coalesce with neighbors via pointer comparisons.
+  - In real allocators, sizes are typically in "units" (e.g., multiples of
+header size) and alignment must be maintained.
+*/
