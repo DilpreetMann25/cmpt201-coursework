@@ -1,0 +1,105 @@
+
+rk❯ ls
+lab0  lab1  lab2  lab3  lab4  lab5  lab6  lecture  README.md
+~/cmpt201-coursework❯ git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+    lab6/
+
+    nothing added to commit but untracked files present (use "git add" to track)
+    ~/cmpt201-coursework❯ git add .
+    ~/cmpt201-coursework❯ git commit -m "lab6"
+    [main 26e70ef] lab6
+     52 files changed, 3654 insertions(+)
+   create mode 100644 lab6/.nvim/CMakeLists.txt.2025-10-26T14:01:54-07:00.hash
+    create mode 100644 lab6/.nvim/CMakeLists.txt.2025-10-26T14:01:54-07:00.nvim
+     create mode 100644 lab6/.nvim/example_1.c.2025-10-26T14:01:19-07:00.hash
+      create mode 100644 lab6/.nvim/example_1.c.2025-10-26T14:01:19-07:00.nvim
+       create mode 100644 lab6/.nvim/example_1.c.2025-10-26T14:54:50-07:00.hash
+        create mode 100644 lab6/.nvim/example_1.c.2025-10-26T14:54:50-07:00.nvim
+         create mode 100644 lab6/.nvim/example_2.c.2025-10-26T14:01:35-07:00.hash
+          create mode 100644 lab6/.nvim/example_2.c.2025-10-26T14:01:35-07:00.nvim
+           create mode 100644 lab6/.nvim/lab6.c.2025-10-26T14:58:39-07:00.hash
+            create mode 100644 lab6/.nvim/lab6.c.2025-10-26T14:58:39-07:00.nvim
+             create mode 100644 lab6/.nvim/lab6.c.2025-10-26T14:58:45-07:00.hash
+              create mode 100644 lab6/.nvim/lab6.c.2025-10-26T14:58:45-07:00.nvim
+               create mode 100644 lab6/.nvim/lab6.c.2025-10-26T15:02:59-07:00.hash
+                create mode 100644 lab6/.nvim/lab6.c.2025-10-26T15:02:59-07:00.nvim
+                 create mode 100644 lab6/CMakeLists.txt
+                  create mode 10Last login: Fri Oct 17 17:11:59 on ttys002
+dilpreetmann@Dilpreets-MacBook-Air-7 ~ % docker exec -it cmpt201 zsh --login
+
+Ｗｅｌｃｏｍｅ  ｔｏ  ＣＭＰＴ  ２０１！
+
+"Thus, programs must be written for people to read, and only incidentally for machines to execute."
+	-- Hal Abelson, SICP
+
+~❯ ls
+cmpt201-coursework  log.c  start_here.sh  units
+~❯ cd cmpt201-coursework
+~/cmpt201-coursework❯ cd lab6
+~/cmpt201-coursework/lab6❯ lks
+zsh: command not found: lks
+~/cmpt201-coursework/lab6❯ ls
+build  CMakeLists.txt  example_1.c  example_2.c
+~/cmpt201-coursework/lab6❯ nvim example_1.c
+~/cmpt201-coursework/lab6❯ nvim lab6.c
+~/cmpt201-coursework/lab6❯ nvim lab6.c
+~/cmpt201-coursework/lab6❯ rm -rf lab6.c
+~/cmpt201-coursework/lab6❯ nvim lab6.c
+~/cmpt201-coursework/lab6❯ cd ..
+~/cmpt201-co0644 lab6/build/CMakeCache.txt
+ create mode 100644 lab6/build/CMakeFiles/3.28.3/CMakeCCompiler.cmake
+ create mode 100755 lab6/build/CMakeFiles/3.28.3/CMakeDetermineCompilerABI_C.bin
+ create mode 100644 lab6/build/CMakeFiles/3.28.3/CMakeSystem.cmake
+ create mode 100644 lab6/build/CMakeFiles/3.28.3/CompilerIdC/CMakeCCompilerId.c
+ create mode 100644 lab6/build/CMakeFiles/CMakeConfigureLog.yaml
+ create mode 100644 lab6/build/CMakeFiles/CMakeDirectoryInformation.cmake
+ create mode 100644 lab6/build/CMakeFiles/Makefile.cmake
+ lab7.c +
+   95 ┆ ┆
+   96 ┆ ┆ // Read lines until "end"
+   97 ┆ ┆ char buf[256];
+   98 ┆ ┆ while (fgets(buf, sizeof(buf), stdin)) {
+   99 ┆ ┆ ┆ ┆ // trim trailing newline (optional)
+  100 ┆ ┆ ┆ ┆ size_t n = strlen(buf);
+  101 ┆ ┆ ┆ ┆ if (n > 0 && buf[n - 1] == '\n') buf[n - 1] = '\0';
+  102 ┆ ┆ ┆ ┆
+  103 ┆ ┆ ┆ ┆ if (strcmp(buf, "end") == 0) break;
+  104 ┆ ┆ ┆ ┆
+  105 ┆ ┆ ┆ ┆ // Try to parse an integer
+  106 ┆ ┆ ┆ ┆ int value;
+  107 ┆ ┆ ┆ ┆ if (sscanf(buf, "%d", &value) == 1) {
+  108 ┆ ┆ ┆ ┆ ┆ ┆ assert(input_count < MAX_LINES);
+  109 ┆ ┆ ┆ ┆ ┆ ┆ inputs[input_count].line_number = input_count + 1; // 1-based
+  110 ┆ ┆ ┆ ┆ ┆ ┆ inputs[input_count].value = value;
+  111 ┆ ┆ ┆ ┆ ┆ ┆ input_count++;
+  112 ┆ ┆ ┆ ┆ } else {
+  113 ┆ ┆ ┆ ┆ ┆ ┆ // Ignore non-integer garbage lines (other than "end")
+  114 ┆ ┆ ┆ ┆ ┆ ┆ // You could print a warning if desired.
+  115 ┆ ┆ ┆ ┆ }
+  116 ┆ ┆ }
+  117 ┆ ┆
+  118 ┆ ┆ // MAP: build intermediate list
+  119 ┆ ┆ for (int i = 0; i < input_count; i++) {
+  120 ┆ ┆ ┆ ┆ map(&inputs[i], &intermediates[i]);
+  121 ┆ ┆ }
+  122 ┆ ┆
+  123 ┆ ┆ // GROUP BY KEY (actually by doubled value)
+  124 ┆ ┆ for (int i = 0; i < input_count; i++) {
+  125 ┆ ┆ ┆ ┆ groupByKey(&intermediates[i], outputs, &output_count);
+  126 ┆ ┆ }
+  127 ┆ ┆
+  128 ┆ ┆ // REDUCE: print each grouped output in insertion order
+  129 ┆ ┆ for (int i = 0; i < output_count; i++) {
+  130 ┆ ┆ ┆ ┆ reduce(outputs[i]);
+  131 ┆ ┆ }
+  132 ┆ ┆
+  133 ┆ ┆ return 0;
+E 134 }     ■ expected ';' after struct
+  135
+E 136      ■ expected '}'
+ NORMAL  lab7.c | +                                         W: 1  E: 9  unix | utf-8 | c   99%  135:0
